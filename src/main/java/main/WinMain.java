@@ -29,6 +29,7 @@ import common.MyListenerAttachable;
 import common.MyTable;
 import common.MyTask;
 import common.MyTaskListener;
+import org.h2.tools.Server;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -38,6 +39,9 @@ import java.awt.event.MouseEvent;
 public class WinMain extends WinMainLayout implements MyListenerAttachable{
 	BookTable booktable;
 	MemberTable membertable;
+
+	Server server;
+
 	private MyTask task;
 
 	public static MemberDB memberdb;
@@ -46,7 +50,6 @@ public class WinMain extends WinMainLayout implements MyListenerAttachable{
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
-		memberdb = Member.MemberDB.getInstance();
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -63,8 +66,12 @@ public class WinMain extends WinMainLayout implements MyListenerAttachable{
 	/**
 	 * Create the dialog.
 	 */
-	public WinMain() {
+	public WinMain() throws SQLException {
 
+		server = Server.createTcpServer("-tcp", "-tcpAllowOthers", "-tcpPort", "9092");
+		server.start();
+		System.out.println(server.getURL());
+		memberdb = Member.MemberDB.getInstance();
 		setTitle("ICI 도서 대여점 프로그램 Ver 0.1");
 
 		booktable = new BookTable();
@@ -73,7 +80,7 @@ public class WinMain extends WinMainLayout implements MyListenerAttachable{
 		
 		Vector<Object> v = new Vector<>();
 		BookSearchCondition[] bookCondition = BookSearchCondition.values();
-		MemberSearchCondition[] memberCondition = MemberSearchCondition.values(); 
+		MemberSearchCondition[] memberCondition = MemberSearchCondition.values();
 		for (BookSearchCondition a:bookCondition) v.add(a);
 		for (MemberSearchCondition a:memberCondition) v.add(a);
 		DefaultComboBoxModel<Object> model = new DefaultComboBoxModel<Object>(v);
@@ -96,7 +103,7 @@ public class WinMain extends WinMainLayout implements MyListenerAttachable{
 				searchBookAndDo(JDialogType.ReadAll);
 			}
 		});
-		
+
 		btnBookShowAll.addActionListener(e -> {
 			searchBook("isbn", "");
 		});
@@ -167,6 +174,7 @@ public class WinMain extends WinMainLayout implements MyListenerAttachable{
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosed(WindowEvent e) {
+				server.shutdown();
 				System.exit(0);
 			}
 		});
@@ -238,7 +246,7 @@ public class WinMain extends WinMainLayout implements MyListenerAttachable{
 		});
 
 		/// 여기까지 멤버관련 리스너
-		
+
 		mntmBorrow.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				searchMemberAndDo(JDialogType.Borrow);
@@ -256,7 +264,7 @@ public class WinMain extends WinMainLayout implements MyListenerAttachable{
 		task.addPropertyChangeListener(new MyTaskListener(this, task));
 		task.execute();
 	}
-	
+
 	private void searchMember(String condition, String searchWord) {
 		try {
 			Vector<Object[]> toShow = memberdb.searchMembers(condition, searchWord);

@@ -10,9 +10,10 @@ import java.util.concurrent.TimeUnit;
 import com.mysql.cj.jdbc.MysqlDataSource;
 
 import common.PoisonPill;
+import org.h2.jdbcx.JdbcDataSource;
 
 public class BookSearchThread implements Runnable {
-	private MysqlDataSource dataSource;
+	private JdbcDataSource dataSource;
 	private String sql;
 	private String sqlGoal;
 	private BookTask task;
